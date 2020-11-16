@@ -1,0 +1,68 @@
+body {
+    background-color: #18191a;
+}
+
+.clickable {
+    cursor: pointer;
+}
+.zoom {
+    transition: transform .2s; /* Animation */
+}
+
+.zoom:hover {
+    transform: scale(1.066); /* (150% zoom - Note: if the zoom is too large, it will go outside of the viewport) */
+}
+
+.darkBg {
+    background: #242526;
+}
+
+.primaryBg {
+    background: #80DEEA;
+}
+
+.primaryText {
+    color: #80DEEA;
+    font-size: 0.8em;
+}
+
+.sammy-nowrap-2 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fancySwitch {
+    position: relative; width: 47px;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+.fancySwitch-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.fancySwitch-label {
+    display: block; overflow: hidden; cursor: pointer;
+    height: 28px; padding: 0; line-height: 28px;
+    border: 2px solid #E3E3E3; border-radius: 28px;
+    background-color: #242526;
+    transition: background-color 0.2s ease-in;
+}
+.fancySwitch-label:before {
+    content: "";
+    display: block; width: 28px; margin: 0;
+    background: #FFFFFF;
+    position: absolute; top: 0; bottom: 0;
+    right: 17px;
+    border: 2px solid #E3E3E3; border-radius: 28px;
+    transition: all 0.2s ease-in 0s;
+}
+.fancySwitch-checkbox:checked + .fancySwitch-label {
+    background-color: #80DEEA;
+}
+.fancySwitch-checkbox:checked + .fancySwitch-label, .fancySwitch-checkbox:checked + .fancySwitch-label:before {
+    border-color: #80DEEA;
+}
+.fancySwitch-checkbox:checked + .fancySwitch-label:before {
+    right: 0;
+}
