@@ -6,11 +6,13 @@ body {
     cursor: pointer;
 }
 .zoom {
-    transition: transform .2s; /* Animation */
+    transition: transform .1s;
 }
 
 .zoom:hover {
-    transform: scale(1.066); /* (150% zoom - Note: if the zoom is too large, it will go outside of the viewport) */
+    -webkit-transform: scale3d(1.06, 1.06, 1);
+    -webkit-font-smoothing: antialiased;
+    -webkit-backface-visibility: hidden;
 }
 
 .darkBg {
@@ -65,4 +67,53 @@ body {
 }
 .fancySwitch-checkbox:checked + .fancySwitch-label:before {
     right: 0;
+}
+
+.flipDevice {
+    width: 188px;
+    height: 188px;
+}
+
+.flipRule {
+    width: 188px;
+    height: 365px;
+}
+
+.flipCard {
+    width: 100%;
+    height: 100%;
+    transition: transform 1s;
+    transform-style: preserve-3d;
+    position: relative;
+}
+
+.flipCard.is-flipped {
+    transform: rotateY(180deg);
+}
+
+.flipCard-front {
+    position: absolute;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+
+.flipCard-back {
+    transform: rotateY(180deg);
+}
+
+.addIcon {
+    font-size: 100px;
+}
+
+.deviceCard {
+    width: 188px;
+    max-width: 188px;
+    height: 188px;
+}
+
+.ruleCard {
+    width: 188px;
+    max-width: 188px;
+    height: 365px;
 }

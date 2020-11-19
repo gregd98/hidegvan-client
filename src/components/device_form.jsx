@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { deviceConstraints as rules } from '../constraints/deviceContraints';
 import { restGet, restPut, restPost } from '../communication';
+import { Input, trimDecorator } from './form_utils.jsx';
 import ErrorPage from './error_page.jsx';
 import LoadingPage from './loading_page.jsx';
+import { SERVER_PATH } from '../constants';
 
-const  classNames = require('classnames');
 const validate = require('validate.js');
-
-const trimDecorator = (value) => value.trim();
 
 const DeviceForm = (prop) => {
   const { isEdit } = prop;
@@ -26,10 +25,12 @@ const DeviceForm = (prop) => {
 
   const history = useHistory();
 
+  const setterDict = { name: setDeviceName, id: setDeviceId };
+
   useEffect(() => {
     if (isEdit) {
       setLoading(true);
-      restGet(`http://localhost/api/devices/${editId}`).then((result) => {
+      restGet(`${SERVER_PATH}api/devices/${editId}`).then((result) => {
         const setData = (setter, value) => setter((rest) => ({ ...rest, value }));
         setData(setDeviceName, result.name);
         setData(setDeviceId, result.deviceId);
@@ -50,7 +51,6 @@ const DeviceForm = (prop) => {
     event.preventDefault();
     setFormError('');
     const evaluateInputErrors = (errors) => {
-      const setterDict = { name: setDeviceName, id: setDeviceId };
       Object.entries(errors).forEach(([key, value]) => {
         setterDict[key]((rest) => ({ ...rest, error: value[0] }));
       });
@@ -74,17 +74,16 @@ const DeviceForm = (prop) => {
         methodFunc = restPut;
       }
 
-      methodFunc('http://localhost/api/devices', body).then(() => {
-        backToDashboard();
-      }).catch((error) => {
-        setFormDisabled(false);
-        if (error.inputErrors) {
-          evaluateInputErrors(error.inputErrors);
-        } else {
-          console.log(`Error: ${error.message}`);
-          setFormError(`Error: ${error.message}`);
-        }
-      });
+      methodFunc(`${SERVER_PATH}api/devices`, body).then(backToDashboard)
+        .catch((error) => {
+          setFormDisabled(false);
+          if (error.inputErrors) {
+            evaluateInputErrors(error.inputErrors);
+          } else {
+            console.log(`Error: ${error.message}`);
+            setFormError(`Error: ${error.message}`);
+          }
+        });
     }
   };
 
@@ -97,7 +96,7 @@ const DeviceForm = (prop) => {
   }
 
   return (
-    <div className="d-flex justify-content-center text-center mx-2">
+    <div className="d-flex justify-content-center mx-2">
       <div style={{ width: 500 }}>
         <h1 className="display-4 text-light mt-4 text-center">{isEdit ? 'Edit' : 'Add'} device</h1>
         <form onSubmit={submitForm} className="mt-5">
@@ -124,65 +123,25 @@ const DeviceForm = (prop) => {
             </div>
           </div>
           <div className="form-group">
-            <p className="text-light mb-2">Measuring device</p>
+            <p className="text-light text-center mb-2">Measuring device</p>
             <div onClick={(e) => e.stopPropagation()} className="fancySwitch m-auto">
               <input onChange={() => setMeasuring(!isMeasuring)} type="checkbox" className="fancySwitch-checkbox" id="mes" checked={isMeasuring} disabled={formDisabled}/>
               <label className="fancySwitch-label" htmlFor="mes" />
             </div>
           </div>
-        </form>
-        <div className="d-flex justify-content-center mt-5">
-          <div>
-            <button onClick={submitForm} type="submit" className="btn btn-light" disabled={formDisabled}>
-              {formDisabled && <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true" />}
-              {isEdit ? 'Edit' : 'Add'} device
-            </button>
-            <button onClick={backToDashboard} type="button" className="btn btn-outline-light ml-2" disabled={formDisabled}>Cancel</button>
+          <div className="d-flex justify-content-center mt-5">
+            <div>
+              <button type="submit" className="btn btn-light" disabled={formDisabled}>
+                {formDisabled && <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true" />}
+                {isEdit ? 'Edit' : 'Add'} device
+              </button>
+              <button onClick={backToDashboard} type="button" className="btn btn-outline-light ml-2" disabled={formDisabled}>Cancel</button>
+            </div>
           </div>
-        </div>
+        </form>
         {formError && <div className="alert alert-danger mt-5" role="alert">{formError}</div>}
       </div>
     </div>
-  );
-};
-
-const Input = (prop) => {
-  const {
-    type, id, label, state, setState, decorators, constraint, disabled,
-  } = prop;
-
-  const handleInputChange = (event) => {
-    const { value } = event.target;
-    setState((rest) => ({ ...rest, value, error: '' }));
-  };
-
-  const handleBlur = () => {
-    let { value } = state;
-    if (decorators) {
-      for (let i = 0; i < decorators.length; i += 1) {
-        value = decorators[i](value);
-      }
-      setState((rest) => ({ ...rest, value }));
-    }
-    const validation = validate({ value }, constraint, { fullMessages: false });
-    if (validation) {
-      setState((rest) => ({ ...rest, error: validation.value[0] }));
-    }
-  };
-
-  const classes = classNames({
-    'form-control': true,
-    'is-invalid': state.error,
-  });
-
-  return (
-    <React.Fragment>
-      <label className="text-light" htmlFor={id}>{label}</label>
-      <input onChange={handleInputChange} onBlur={handleBlur} type={type}
-             className={classes} id={id} placeholder={label}
-             value={state.value} disabled={disabled}/>
-      {!disabled && state.error && <div className="invalid-feedback">{state.error}</div>}
-    </React.Fragment>
   );
 };
 
