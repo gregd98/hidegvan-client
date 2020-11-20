@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import socketIOClient from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
-import { restGet, restDelete } from '../communication';
+import { restGet, restDelete, restPost } from '../communication';
 import { SERVER_PATH } from '../constants';
 import { ConfirmationDialog, MessageDialog } from './dialog_utils.jsx';
 import ErrorPage from './error_page.jsx';
@@ -14,6 +14,8 @@ const Dashboard = () => {
   const [rules, setRules] = useState([]);
   const [socket, setSocket] = useState(null);
   const [flippedCard, setFlippedCard] = useState(null);
+  const [switchDisabled, setSwitchDisabled] = useState(false);
+  const [msgDialog, setMsgDialog] = useState('');
   const [deletionDialog, setDeletionDialog] = useState({
     text: '',
     btnHandler: () => {},
@@ -91,9 +93,15 @@ const Dashboard = () => {
     setFlippedCard(flippedCard === id ? null : id);
   };
 
-  const switchDevice = (id, name) => {
-    console.log(`Switch: ${name} ${id}`);
-    window.$('#messageDialog').modal('show');
+  const switchEntity = (id, name, state, isDevice) => {
+    setSwitchDisabled(true);
+    restPost(`${SERVER_PATH}api/${isDevice ? 'devices' : 'rules'}/${id}/switch-state`, { state }).then(() => {
+      setSwitchDisabled(false);
+    })
+      .catch((error) => {
+        setMsgDialog(`Failed to ${isDevice ? `switch ${name}` : `${state ? 'enable' : 'disable'} ${name}`}: ${error.message}`);
+        window.$('#messageDialog').modal('show');
+      });
   };
 
   const editClicked = (e, id, isDevice) => {
@@ -145,7 +153,7 @@ const Dashboard = () => {
                       <p className="mx-0 mt-0 mb-1 text-light sammy-nowrap-2">{name}</p>
                       <h2 className="card-title text-light">{temperature ? `${temperature.toFixed(1)} °C` : 'N/A'}</h2>
                       <div onClick={(e) => e.stopPropagation()} className="fancySwitch mt-3 mx-auto">
-                        <input onChange={() => switchDevice(id, name)} type="checkbox" className="fancySwitch-checkbox" id={`cb-${id}`} checked={active}/>
+                        <input onChange={() => switchEntity(id, name, !active, true)} type="checkbox" className="fancySwitch-checkbox" id={`cb-${id}`} checked={active} disabled={switchDisabled}/>
                         <label className="fancySwitch-label" htmlFor={`cb-${id}`}/>
                       </div>
                     </div>
@@ -189,7 +197,7 @@ const Dashboard = () => {
                       <p className="text-light text-muted mx-0 mb-0 mt-3">Controlled:</p>
                       <h5 className="text-light mt-0 sammy-nowrap-2">{rule.controlDevice.name}</h5>
                       <div onClick={(e) => e.stopPropagation()} className="fancySwitch mx-auto mt-4">
-                        <input onChange={() => console.log('change')} type="checkbox" className="fancySwitch-checkbox" id={`cb-${id}`} checked={enabled}/>
+                        <input onChange={() => switchEntity(id, name, !enabled, false)} type="checkbox" className="fancySwitch-checkbox" id={`cb-${id}`} checked={enabled} disabled={switchDisabled}/>
                         <label className="fancySwitch-label" htmlFor={`cb-${id}`} />
                       </div>
                     </div>
@@ -211,7 +219,7 @@ const Dashboard = () => {
                             btnHandler={deletionDialog.btnHandler}
                             isLoading={deletionDialog.isLoading}
                             errorMessage={deletionDialog.errorMessage}/>
-        <MessageDialog id="messageDialog" text="HellóBelló"/>
+        <MessageDialog id="messageDialog" text={msgDialog}/>
       </div>
     </div>
   );
