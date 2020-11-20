@@ -81,13 +81,6 @@ const RuleForm = (prop) => {
     return undefined;
   };
 
-  validate.validators.diffTime = (value) => {
-    if (value === startTime.value) {
-      return 'Start time and end time must be different.';
-    }
-    return undefined;
-  };
-
   validate.validators.tempCompare = (value) => {
     const min = parseFloat(minTemp.value);
     const max = parseFloat(value);
@@ -113,7 +106,6 @@ const RuleForm = (prop) => {
       });
     };
 
-    console.log(maxTemp.value);
     const body = {
       name: ruleName.value,
       startTime: startTime.value,

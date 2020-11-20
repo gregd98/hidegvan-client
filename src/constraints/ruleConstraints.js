@@ -28,7 +28,7 @@ export const ruleConstraints = {
     },
   },
   startTime: time,
-  endTime: { ...time, diffTime: true },
+  endTime: time,
   minTemp: {
     presence: required,
     numericality: {
