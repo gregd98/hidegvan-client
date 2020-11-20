@@ -11,10 +11,10 @@ import { APP_URL_PATH } from './constants';
 const App = () => (
   <Router>
     <Switch>
-      <Route path={`${APP_URL_PATH}addDevice`}>
+      <Route path={`${APP_URL_PATH}add-device`}>
         <DeviceForm isEdit={false}/>
       </Route>
-      <Route path={`${APP_URL_PATH}addRule`}>
+      <Route path={`${APP_URL_PATH}add-rule`}>
         <RuleForm isEdit={false}/>
       </Route>
       <Route path={`${APP_URL_PATH}devices/:id`}>

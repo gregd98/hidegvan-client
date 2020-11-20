@@ -43,7 +43,7 @@ export const Input = (prop) => {
       <label className="text-light" htmlFor={id}>{label}</label>
       <input onChange={handleInputChange} onBlur={handleBlur} type={type}
              className={classes} id={id} placeholder={label}
-             value={state.value} disabled={disabled} step="any"/>
+             value={state.value} disabled={disabled} step="any" autoComplete="off"/>
       {!disabled && state.error && <div className="invalid-feedback">{state.error}</div>}
     </React.Fragment>
   );

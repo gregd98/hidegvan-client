@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import socketIOClient from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
-import { restGet } from '../communication';
+import { restGet, restDelete } from '../communication';
 import { SERVER_PATH } from '../constants';
+import { ConfirmationDialog, MessageDialog } from './dialog_utils.jsx';
+import ErrorPage from './error_page.jsx';
+import LoadingPage from './loading_page.jsx';
 
 const classNames = require('classnames');
 
@@ -11,23 +14,46 @@ const Dashboard = () => {
   const [rules, setRules] = useState([]);
   const [socket, setSocket] = useState(null);
   const [flippedCard, setFlippedCard] = useState(null);
+  const [deletionDialog, setDeletionDialog] = useState({
+    text: '',
+    btnHandler: () => {},
+    isLoading: false,
+    errorMessage: '',
+  });
+
+  const [pageError, setPageError] = useState({});
+  const [isLoading, setLoading] = useState(false);
 
   const history = useHistory();
+  const pad = (num) => (num < 10 ? `0${num}` : num);
+  const timeToString = (time) => `${pad(Math.trunc(time / 60))}:${pad(time % 60)}`;
 
   useEffect(() => {
-    restGet(`${SERVER_PATH}api/devices`).then((result) => {
-      setDevices(result);
-    }).catch((error) => {
-      console.log(error.message);
-    });
+    const removeModal = () => {
+      window.$('#deletionDialog').modal('hide');
+      window.$('#messageDialog').modal('hide');
+      window.$('body').removeClass('modal-open');
+      window.$('.modal-backdrop').remove();
+    };
+    window.onpopstate = removeModal;
+    return () => {
+      removeModal();
+      window.onpopstate = () => {};
+    };
   }, []);
 
   useEffect(() => {
-    restGet(`${SERVER_PATH}api/rules`).then((result) => {
-      setRules(result);
-    }).catch((error) => {
-      console.log(error.message);
-    });
+    (async () => {
+      try {
+        setLoading(true);
+        setDevices(await restGet(`${SERVER_PATH}api/devices`));
+        setRules(await restGet(`${SERVER_PATH}api/rules`));
+      } catch (error) {
+        setPageError(error);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -42,49 +68,57 @@ const Dashboard = () => {
   useEffect(() => {
     if (socket) {
       socket.on('device update', (payload) => setDevices(payload));
-    }
-  }, [socket]);
-
-  useEffect(() => {
-    if (socket) {
       socket.on('rule update', (payload) => setRules(payload));
     }
   }, [socket]);
 
-  const pad = (num) => (num < 10 ? `0${num}` : num);
-  const timeToString = (time) => `${pad(Math.trunc(time / 60))}:${pad(time % 60)}`;
-
-  const addDeviceClicked = () => {
-    history.push('/addDevice');
+  const deleteEntity = async (id, isDevice) => {
+    const setData = (obj) => setDeletionDialog((rest) => ({ ...rest, ...obj }));
+    try {
+      setData({ isLoading: true });
+      await restDelete(`${SERVER_PATH}api/${isDevice ? 'devices' : 'rules'}/${id}`);
+      window.$('#deletionDialog').modal('hide');
+    } catch (error) {
+      setData({ isLoading: false, errorMessage: `Error: ${error.message}` });
+    }
   };
 
-  const addRuleClicked = () => {
-    history.push('/addRule');
+  const addClicked = (isDevice) => {
+    history.push(`/add-${isDevice ? 'device' : 'rule'}`);
   };
 
   const cardClicked = (id) => {
     setFlippedCard(flippedCard === id ? null : id);
   };
 
-  const editDeviceClicked = (e, id) => {
-    e.stopPropagation();
-    history.push(`/devices/${id}`);
+  const switchDevice = (id, name) => {
+    console.log(`Switch: ${name} ${id}`);
+    window.$('#messageDialog').modal('show');
   };
 
-  const deleteDeviceClicked = (e, id) => {
+  const editClicked = (e, id, isDevice) => {
     e.stopPropagation();
-    console.log(`Delete clicked: ${id}`);
+    history.push(`/${isDevice ? 'devices' : 'rules'}/${id}`);
   };
 
-  const editRuleClicked = (e, id) => {
+  const deleteClicked = (e, id, name, isDevice) => {
     e.stopPropagation();
-    history.push(`/rules/${id}`);
+    setDeletionDialog({
+      text: `Do you want to delete ${isDevice ? 'device' : 'rule'} ${name}?`,
+      btnHandler: () => deleteEntity(id, isDevice),
+      isLoading: false,
+      errorMessage: '',
+    });
+    window.$('#deletionDialog').modal('show');
   };
 
-  const deleteRuleClicked = (e, id) => {
-    e.stopPropagation();
-    console.log(`Delete clicked: ${id}`);
-  };
+  if (pageError.message) {
+    return <ErrorPage status={pageError.status} message={pageError.message} />;
+  }
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
 
   return (
     <div className="d-flex justify-content-center mt-4 text-center">
@@ -101,8 +135,8 @@ const Dashboard = () => {
                   <div onClick={() => cardClicked(id)} className="flipCard-front card text-center rounded-circle darkBg p-0 clickable shadow-sm deviceCard">
                     <div className="darkBg my-auto mx-3">
                       <div className="mx-1">
-                        <button onClick={(e) => editDeviceClicked(e, id)} type="button" className="btn btn-md btn-outline-light btn-block">Edit</button>
-                        <button onClick={(e) => deleteDeviceClicked(e, id)} type="button" className="btn btn btn-outline-danger btn-block">Delete</button>
+                        <button onClick={(e) => editClicked(e, id, true)} type="button" className="btn btn-md btn-outline-light btn-block">Edit</button>
+                        <button onClick={(e) => deleteClicked(e, id, name, true)} type="button" className="btn btn btn-outline-danger btn-block">Delete</button>
                       </div>
                     </div>
                   </div>
@@ -111,7 +145,7 @@ const Dashboard = () => {
                       <p className="mx-0 mt-0 mb-1 text-light sammy-nowrap-2">{name}</p>
                       <h2 className="card-title text-light">{temperature ? `${temperature.toFixed(1)} °C` : 'N/A'}</h2>
                       <div onClick={(e) => e.stopPropagation()} className="fancySwitch mt-3 mx-auto">
-                        <input onChange={() => console.log('change')} type="checkbox" className="fancySwitch-checkbox" id={`cb-${id}`} checked={active}/>
+                        <input onChange={() => switchDevice(id, name)} type="checkbox" className="fancySwitch-checkbox" id={`cb-${id}`} checked={active}/>
                         <label className="fancySwitch-label" htmlFor={`cb-${id}`}/>
                       </div>
                     </div>
@@ -120,7 +154,7 @@ const Dashboard = () => {
               </div>
             );
           })}
-          <div onClick={addDeviceClicked} className="card text-center rounded-circle darkBg p-0 clickable shadow-sm mx-2 mb-4 zoom deviceCard">
+          <div onClick={() => addClicked(true)} className="card text-center rounded-circle darkBg p-0 clickable shadow-sm mx-2 mb-4 zoom deviceCard">
             <div className="darkBg my-auto mx-3">
               <span className="material-icons text-light text-muted addIcon">add</span>
             </div>
@@ -139,8 +173,8 @@ const Dashboard = () => {
                   <div onClick={() => cardClicked(id)} className="flipCard-front card text-center rounded-lg darkBg p-0 clickable shadow-sm ruleCard">
                     <div className="darkBg my-auto mx-3">
                       <div className="mx-1">
-                        <button onClick={(e) => editRuleClicked(e, id)} type="button" className="btn btn-md btn-outline-light btn-block">Edit</button>
-                        <button onClick={(e) => deleteRuleClicked(e, id)} type="button" className="btn btn btn-outline-danger btn-block">Delete</button>
+                        <button onClick={(e) => editClicked(e, id, false)} type="button" className="btn btn-md btn-outline-light btn-block">Edit</button>
+                        <button onClick={(e) => deleteClicked(e, id, name, false)} type="button" className="btn btn btn-outline-danger btn-block">Delete</button>
                       </div>
                     </div>
                   </div>
@@ -164,12 +198,20 @@ const Dashboard = () => {
               </div>
             );
           })}
-          <div onClick={addRuleClicked} className="card text-center rounded-lg darkBg p-0 clickable shadow-sm mx-2 mb-4 zoom ruleCard">
+          <div onClick={() => addClicked(false)} className="card text-center rounded-lg darkBg p-0 clickable shadow-sm mx-2 mb-4 zoom ruleCard">
             <div className="darkBg my-auto mx-3">
               <span className="material-icons text-light text-muted addIcon">add</span>
             </div>
           </div>
         </div>
+        <ConfirmationDialog id="deletionDialog"
+                            text={deletionDialog.text}
+                            btnText="Delete"
+                            btnType="danger"
+                            btnHandler={deletionDialog.btnHandler}
+                            isLoading={deletionDialog.isLoading}
+                            errorMessage={deletionDialog.errorMessage}/>
+        <MessageDialog id="messageDialog" text="HellóBelló"/>
       </div>
     </div>
   );
