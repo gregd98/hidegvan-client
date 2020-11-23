@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useCookies } from 'react-cookie';
 import socketIOClient from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
-import { restGet, restDelete, restPost } from '../communication';
+import { restGet, restDelete, restPost } from '../utils/communication';
 import { SERVER_PATH } from '../constants';
 import { ConfirmationDialog, MessageDialog } from './dialog_utils.jsx';
 import ErrorPage from './error_page.jsx';
 import LoadingPage from './loading_page.jsx';
+import { loadDevices } from '../actions/deviceActions';
+import { loadRules } from '../actions/ruleActions';
 
 const classNames = require('classnames');
 
 const Dashboard = () => {
-  const [devices, setDevices] = useState([]);
-  const [rules, setRules] = useState([]);
+  const devices = useSelector((state) => state.devices.devices);
+  const rules = useSelector((state) => state.rules.rules);
   const [socket, setSocket] = useState(null);
   const [flippedCard, setFlippedCard] = useState(null);
   const [switchDisabled, setSwitchDisabled] = useState(false);
@@ -27,6 +31,10 @@ const Dashboard = () => {
   const [isLoading, setLoading] = useState(false);
 
   const history = useHistory();
+  const dispatch = useDispatch();
+  const cookies = useCookies();
+  const removeCookie = cookies[2];
+
   const pad = (num) => (num < 10 ? `0${num}` : num);
   const timeToString = (time) => `${pad(Math.trunc(time / 60))}:${pad(time % 60)}`;
 
@@ -48,15 +56,15 @@ const Dashboard = () => {
     (async () => {
       try {
         setLoading(true);
-        setDevices(await restGet(`${SERVER_PATH}api/devices`));
-        setRules(await restGet(`${SERVER_PATH}api/rules`));
+        dispatch(loadDevices(await restGet(`${SERVER_PATH}api/devices`, dispatch, removeCookie)));
+        dispatch(loadRules(await restGet(`${SERVER_PATH}api/rules`, dispatch, removeCookie)));
       } catch (error) {
         setPageError(error);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [dispatch, removeCookie]);
 
   useEffect(() => {
     const so = socketIOClient(window.location.hostname);
@@ -69,16 +77,16 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (socket) {
-      socket.on('device update', (payload) => setDevices(payload));
-      socket.on('rule update', (payload) => setRules(payload));
+      socket.on('device update', (payload) => dispatch(loadDevices(payload)));
+      socket.on('rule update', (payload) => dispatch(loadRules(payload)));
     }
-  }, [socket]);
+  }, [dispatch, socket]);
 
   const deleteEntity = async (id, isDevice) => {
     const setData = (obj) => setDeletionDialog((rest) => ({ ...rest, ...obj }));
     try {
       setData({ isLoading: true });
-      await restDelete(`${SERVER_PATH}api/${isDevice ? 'devices' : 'rules'}/${id}`);
+      await restDelete(`${SERVER_PATH}api/${isDevice ? 'devices' : 'rules'}/${id}`, dispatch, removeCookie);
       window.$('#deletionDialog').modal('hide');
     } catch (error) {
       setData({ isLoading: false, errorMessage: `Error: ${error.message}` });
@@ -95,7 +103,7 @@ const Dashboard = () => {
 
   const switchEntity = (id, name, state, isDevice) => {
     setSwitchDisabled(true);
-    restPost(`${SERVER_PATH}api/${isDevice ? 'devices' : 'rules'}/${id}/switch-state`, { state }).then(() => {
+    restPost(`${SERVER_PATH}api/${isDevice ? 'devices' : 'rules'}/${id}/switch-state`, { state }, dispatch, removeCookie).then(() => {
       setSwitchDisabled(false);
     })
       .catch((error) => {

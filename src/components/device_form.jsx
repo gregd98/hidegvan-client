@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
-import { deviceConstraints as rules } from '../constraints/deviceContraints';
-import { restGet, restPut, restPost } from '../communication';
+import { useDispatch } from 'react-redux';
+import { useCookies } from 'react-cookie';
+import { deviceConstraints as rules } from '../constraints/deviceConstraints';
+import { restGet, restPut, restPost } from '../utils/communication';
 import { Input, trimDecorator } from './form_utils.jsx';
 import ErrorPage from './error_page.jsx';
 import LoadingPage from './loading_page.jsx';
@@ -24,13 +26,16 @@ const DeviceForm = (prop) => {
   const [isLoading, setLoading] = useState(false);
 
   const history = useHistory();
+  const dispatch = useDispatch();
+  const cookies = useCookies();
+  const removeCookie = cookies[2];
 
   const setterDict = { name: setDeviceName, id: setDeviceId };
 
   useEffect(() => {
     if (isEdit) {
       setLoading(true);
-      restGet(`${SERVER_PATH}api/devices/${editId}`).then((result) => {
+      restGet(`${SERVER_PATH}api/devices/${editId}`, dispatch, removeCookie).then((result) => {
         const setData = (setter, value) => setter((rest) => ({ ...rest, value }));
         setData(setDeviceName, result.name);
         setData(setDeviceId, result.deviceId);
@@ -41,7 +46,7 @@ const DeviceForm = (prop) => {
         setLoading(false);
       });
     }
-  }, [isEdit, editId]);
+  }, [isEdit, editId, dispatch, removeCookie]);
 
   const backToDashboard = () => {
     history.replace('/');
@@ -74,7 +79,7 @@ const DeviceForm = (prop) => {
         methodFunc = restPut;
       }
 
-      methodFunc(`${SERVER_PATH}api/devices`, body).then(backToDashboard)
+      methodFunc(`${SERVER_PATH}api/devices`, body, dispatch, removeCookie).then(backToDashboard)
         .catch((error) => {
           setFormDisabled(false);
           if (error.inputErrors) {
@@ -96,7 +101,7 @@ const DeviceForm = (prop) => {
   }
 
   return (
-    <div className="d-flex justify-content-center mx-2">
+    <div className="d-flex justify-content-center mb-4 mx-2">
       <div style={{ width: 500 }}>
         <h1 className="display-4 text-light mt-4 text-center">{isEdit ? 'Edit' : 'Add'} device</h1>
         <form onSubmit={submitForm} className="mt-5">

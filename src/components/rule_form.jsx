@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useCookies } from 'react-cookie';
 import { useHistory, useParams } from 'react-router-dom';
 import {
   Input, roundDecorator, SelectInput, trimDecorator,
@@ -6,7 +8,7 @@ import {
 import ErrorPage from './error_page.jsx';
 import LoadingPage from './loading_page.jsx';
 import { ruleConstraints as rules } from '../constraints/ruleConstraints';
-import { restGet, restPost, restPut } from '../communication';
+import { restGet, restPost, restPut } from '../utils/communication';
 import { SERVER_PATH } from '../constants';
 
 const validate = require('validate.js');
@@ -31,20 +33,23 @@ const RuleForm = (prop) => {
   const [isLoading, setLoading] = useState(false);
 
   const history = useHistory();
+  const dispatch = useDispatch();
+  const cookies = useCookies();
+  const removeCookie = cookies[2];
 
   useEffect(() => {
     const pad = (num) => (num < 10 ? `0${num}` : num);
     const timeToString = (time) => `${pad(Math.trunc(time / 60))}:${pad(time % 60)}`;
     (async () => {
       try {
-        const devices = await restGet(`${SERVER_PATH}api/devices`);
+        const devices = await restGet(`${SERVER_PATH}api/devices`, dispatch, removeCookie);
         const setData = (setter, options) => setter((rest) => ({ ...rest, options }));
         setData(setMeasuringDevice, devices
           .filter((device) => device.measuring === true)
           .map((item) => ({ id: item.id, name: item.name })));
         setData(setControlDevice, devices.map((item) => ({ id: item.id, name: item.name })));
         if (isEdit) {
-          const rule = await restGet(`${SERVER_PATH}api/rules/${editId}`);
+          const rule = await restGet(`${SERVER_PATH}api/rules/${editId}`, dispatch, removeCookie);
           const setRuleData = (setter, value) => setter((rest) => ({ ...rest, value }));
           const setSelectorId = (setter, selectedId) => setter((rest) => ({ ...rest, selectedId }));
           setRuleData(setRuleName, rule.name);
@@ -62,7 +67,7 @@ const RuleForm = (prop) => {
       }
     })();
     setLoading(true);
-  }, [editId, isEdit]);
+  }, [removeCookie, dispatch, editId, isEdit]);
 
   const setterDict = {
     name: setRuleName,
@@ -131,7 +136,7 @@ const RuleForm = (prop) => {
         methodFunc = restPut;
       }
 
-      methodFunc(`${SERVER_PATH}api/rules`, body).then(backToDashboard)
+      methodFunc(`${SERVER_PATH}api/rules`, body, dispatch, removeCookie).then(backToDashboard)
         .catch((error) => {
           setFormDisabled(false);
           if (error.inputErrors) {
@@ -153,7 +158,7 @@ const RuleForm = (prop) => {
   }
 
   return (
-    <div className="d-flex justify-content-center  mx-2">
+    <div className="d-flex justify-content-center mb-4 mx-2">
       <div style={{ width: 500 }}>
         <h1 className="display-4 text-light mt-4 text-center">{isEdit ? 'Edit' : 'Add'} rule</h1>
         <form onSubmit={submitForm} className="mt-5">
