@@ -137,6 +137,11 @@ const Dashboard = () => {
   }
 
   return (
+    <React.Fragment>
+      <nav className="navbar navbar-light fixed-top mt-2 p-0 mr-2" style={{ background: 'transparent' }}>
+        <span />
+        <span onClick={() => history.push('/statistics')} className="material-icons text-light text-light statIcon clickable float-right p-0 mr-2">leaderboard</span>
+      </nav>
     <div className="d-flex justify-content-center mt-4 text-center">
       <div style={{ width: 900 }}>
         <h1 className="display-4 text-light">Devices</h1>
@@ -230,6 +235,7 @@ const Dashboard = () => {
         <MessageDialog id="messageDialog" text={msgDialog}/>
       </div>
     </div>
+    </React.Fragment>
   );
 };
 

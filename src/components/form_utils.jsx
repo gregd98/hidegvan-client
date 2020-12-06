@@ -21,15 +21,18 @@ export const Input = (prop) => {
 
   const handleBlur = () => {
     let { value } = state;
+    console.log(value);
     if (decorators) {
       for (let i = 0; i < decorators.length; i += 1) {
         value = decorators[i](value);
       }
       setState((rest) => ({ ...rest, value }));
     }
-    const validation = validate({ value }, constraint, { fullMessages: false });
-    if (validation) {
-      setState((rest) => ({ ...rest, error: validation.value[0] }));
+    if (constraint !== undefined) {
+      const validation = validate({ value }, constraint, { fullMessages: false });
+      if (validation) {
+        setState((rest) => ({ ...rest, error: validation.value[0] }));
+      }
     }
   };
 
@@ -57,9 +60,11 @@ export const SelectInput = (prop) => {
   const handleInputChange = (event) => setState((rest) => ({ ...rest, selectedId: event.target[event.target.selectedIndex].id, error: '' }));
 
   const handleBlur = () => {
-    const validation = validate({ value: state.selectedId }, constraint, { fullMessages: false });
-    if (validation) {
-      setState((rest) => ({ ...rest, error: validation.value[0] }));
+    if (constraint !== undefined) {
+      const validation = validate({ value: state.selectedId }, constraint, { fullMessages: false });
+      if (validation) {
+        setState((rest) => ({ ...rest, error: validation.value[0] }));
+      }
     }
   };
 

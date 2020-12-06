@@ -13,3 +13,5 @@ bower_components/
 # conf files
 protractor.conf.js
 karma.conf.js
+
+src/canvasjs/*

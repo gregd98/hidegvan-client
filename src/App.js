@@ -10,6 +10,7 @@ import DeviceForm from './components/device_form.jsx';
 import RuleForm from './components/rule_form.jsx';
 import ErrorPage from './components/error_page.jsx';
 import { APP_URL_PATH } from './constants';
+import Statistics from './components/statistics.jsx';
 
 const App = () => {
   const loggedIn = useSelector((state) => state.user.loggedIn);
@@ -31,6 +32,9 @@ const App = () => {
         <PublicRoute path={`${APP_URL_PATH}login`}>
           <Login />
         </PublicRoute>
+        <PrivateRoute path={`${APP_URL_PATH}statistics`}>
+          <Statistics />
+        </PrivateRoute>
         <PrivateRoute path={`${APP_URL_PATH}add-device`}>
           <DeviceForm isEdit={false}/>
         </PrivateRoute>

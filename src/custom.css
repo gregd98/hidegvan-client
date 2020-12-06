@@ -105,6 +105,10 @@ body {
 .addIcon {
     font-size: 100px;
 }
+.statIcon {
+    font-size: 30px;
+}
+
 
 .deviceCard {
     width: 188px;
@@ -116,4 +120,13 @@ body {
     width: 188px;
     max-width: 188px;
     height: 365px;
+}
+
+.nana {
+    background: #242526;
+}
+
+.nana.active {
+    background: #80DEEA;
+    border-color: #80DEEA;
 }
