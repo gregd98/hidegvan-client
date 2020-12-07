@@ -16,6 +16,8 @@ const classNames = require('classnames');
 const Dashboard = () => {
   const devices = useSelector((state) => state.devices.devices);
   const rules = useSelector((state) => state.rules.rules);
+  const devicesLoaded = useSelector((state) => state.devices.loaded);
+  const rulesLoaded = useSelector((state) => state.rules.loaded);
   const [socket, setSocket] = useState(null);
   const [flippedCard, setFlippedCard] = useState(null);
   const [switchDisabled, setSwitchDisabled] = useState(false);
@@ -55,7 +57,9 @@ const Dashboard = () => {
   useEffect(() => {
     (async () => {
       try {
-        setLoading(true);
+        if (!devicesLoaded || !rulesLoaded) {
+          setLoading(true);
+        }
         dispatch(loadDevices(await restGet(`${SERVER_PATH}api/devices`, dispatch, removeCookie)));
         dispatch(loadRules(await restGet(`${SERVER_PATH}api/rules`, dispatch, removeCookie)));
       } catch (error) {
@@ -200,7 +204,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div onClick={() => cardClicked(id)} className="flipCard-front flipCard-back card text-center rounded-lg darkBg p-2 shadow-sm clickable ruleCard" >
-                    <div id={`miarak-${id}`} className="darkBg my-auto">
+                    <div className="darkBg my-auto">
                       <h4 className="text-light mb-0 sammy-nowrap-2">{name}</h4>
                       {activated ? <p className="primaryText">ACTIVE</p> : <p className="primaryText text-muted">INACTIVE</p>}
                       <h5 className="text-light mt-4">{timeToString(startTime)} · {timeToString(endTime)}</h5>

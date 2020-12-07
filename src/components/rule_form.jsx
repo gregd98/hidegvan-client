@@ -10,6 +10,7 @@ import LoadingPage from './loading_page.jsx';
 import { ruleConstraints as rules } from '../constraints/ruleConstraints';
 import { restGet, restPost, restPut } from '../utils/communication';
 import { SERVER_PATH } from '../constants';
+import { needToLoad } from '../actions/deviceActions';
 
 const validate = require('validate.js');
 
@@ -136,7 +137,10 @@ const RuleForm = (prop) => {
         methodFunc = restPut;
       }
 
-      methodFunc(`${SERVER_PATH}api/rules`, body, dispatch, removeCookie).then(backToDashboard)
+      methodFunc(`${SERVER_PATH}api/rules`, body, dispatch, removeCookie).then(() => {
+        dispatch(needToLoad());
+        backToDashboard();
+      })
         .catch((error) => {
           setFormDisabled(false);
           if (error.inputErrors) {

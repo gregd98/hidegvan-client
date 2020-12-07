@@ -46,7 +46,7 @@ const Statistics = () => {
   const removeCookie = cookies[2];
   const history = useHistory();
 
-  // const offset = (new Date()).getTimezoneOffset() * 60000;
+  const offset = (new Date()).getTimezoneOffset() * 60000;
 
   const setterDict = {
     firstDate: setFirstDate,
@@ -166,7 +166,7 @@ const Statistics = () => {
     const update = (a, b) => {
       setFormError('');
       setFormDisabled(true);
-      const query = !isInterval ? `lastTime=${a}` : `firstDate=${a}&lastDate=${b}`;
+      const query = !isInterval ? `lastTime=${a}` : `firstDate=${a + offset}&lastDate=${b + offset}`;
       restGet(`${SERVER_PATH}api/temperatures?${query}`, dispatch, removeCookie).then((result) => {
         dispatch(loadStatistics(result));
         setFormDisabled(false);
@@ -211,29 +211,16 @@ const Statistics = () => {
       } else {
         const n = parseInt(quantity.value, 10);
         if (!Number.isNaN(n)) {
-          let ms;
-          switch (unit.selectedId) {
-            case 'hours':
-              ms = 3600000;
-              break;
-            case 'days':
-              ms = 86400000;
-              break;
-            case 'weeks':
-              ms = 604800000;
-              break;
-            case 'months':
-              ms = 2630016000;
-              break;
-            case 'years':
-              ms = 31556952000;
-              break;
-            default:
-              ms = 3600000;
-              break;
-          }
-          console.log(`${n} ${ms}`);
-          const sum = n * ms;
+          const getMultiplier = () => {
+            switch (unit.selectedId) {
+              case 'hours': default: return 3600000;
+              case 'days': return 86400000;
+              case 'weeks': return 604800000;
+              case 'months': return 2630016000;
+              case 'years': return 31556952000;
+            }
+          };
+          const sum = n * getMultiplier();
           setLastTime(sum);
           update(sum);
         }

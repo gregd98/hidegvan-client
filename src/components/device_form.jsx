@@ -8,6 +8,7 @@ import { Input, trimDecorator } from './form_utils.jsx';
 import ErrorPage from './error_page.jsx';
 import LoadingPage from './loading_page.jsx';
 import { SERVER_PATH } from '../constants';
+import { needToLoad } from '../actions/deviceActions';
 
 const validate = require('validate.js');
 
@@ -79,7 +80,10 @@ const DeviceForm = (prop) => {
         methodFunc = restPut;
       }
 
-      methodFunc(`${SERVER_PATH}api/devices`, body, dispatch, removeCookie).then(backToDashboard)
+      methodFunc(`${SERVER_PATH}api/devices`, body, dispatch, removeCookie).then(() => {
+        dispatch(needToLoad());
+        backToDashboard();
+      })
         .catch((error) => {
           setFormDisabled(false);
           if (error.inputErrors) {
