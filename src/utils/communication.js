@@ -27,11 +27,9 @@ const communication = (url, method, body, dispatch, removeCookie) => new Promise
         if (result.inputErrors) {
           payload.inputErrors =  result.inputErrors;
         }
-        console.log(payload);
         reject(payload);
       }
-    }).catch((error) => {
-      console.log(`Error: ${error.message}`);
+    }).catch(() => {
       payload.message = 'Failed to connect to the server.';
       reject(payload);
     });

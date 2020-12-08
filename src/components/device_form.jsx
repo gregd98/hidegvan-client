@@ -34,6 +34,10 @@ const DeviceForm = (prop) => {
   const setterDict = { name: setDeviceName, id: setDeviceId };
 
   useEffect(() => {
+    document.title = `${isEdit ? 'Edit' : 'Add'} device`;
+  }, [isEdit]);
+
+  useEffect(() => {
     if (isEdit) {
       setLoading(true);
       restGet(`${SERVER_PATH}api/devices/${editId}`, dispatch, removeCookie).then((result) => {
@@ -89,7 +93,6 @@ const DeviceForm = (prop) => {
           if (error.inputErrors) {
             evaluateInputErrors(error.inputErrors);
           } else {
-            console.log(`Error: ${error.message}`);
             setFormError(`Error: ${error.message}`);
           }
         });

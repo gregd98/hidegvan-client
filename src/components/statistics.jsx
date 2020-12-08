@@ -101,11 +101,14 @@ const Statistics = () => {
   };
 
   useEffect(() => {
-    console.log('get time');
+    document.title = 'Statistics';
+  }, []);
+
+  useEffect(() => {
     restGet(`${SERVER_PATH}api/temperatures?lastTime=${3600000 * 6}`, dispatch, removeCookie).then((result) => {
       dispatch(loadStatistics(result));
     }).catch((error) => {
-      console.log(`Fuck: ${error.message}`);
+      console.log(`Error: ${error.message}`);
     });
   }, [dispatch, removeCookie]);
 
@@ -120,9 +123,7 @@ const Statistics = () => {
 
   useEffect(() => {
     if (socket) {
-      console.log('Init socket');
       socket.on('temperature update', (payload) => {
-        console.log('Info incoming');
         setSocketUpdate(payload);
       });
     }
@@ -130,7 +131,6 @@ const Statistics = () => {
 
   useEffect(() => {
     if (socketUpdate !== null) {
-      console.log('Update shit');
       const newList = devices.map((item) => {
         if (item.id !== socketUpdate.deviceId) {
           return item;
@@ -154,7 +154,6 @@ const Statistics = () => {
   }, [devices, dispatch, firstDate.value, isInter, lastDate.value, lastTime, socketUpdate]);
 
   const applyClicked = (isInterval) => {
-    console.log((new Date()).toJSON());
     setInter(isInterval);
     const evaluateInputErrors = (errors) => {
       Object.entries(errors).forEach(([key, value]) => {
@@ -185,7 +184,6 @@ const Statistics = () => {
         firstDate: firstDate.value,
         lastDate: lastDate.value,
       };
-      console.log(body);
       const validation = validate(body, constraints.intervalConstraint, { fullMessages: false });
       if (validation) {
         evaluateInputErrors(validation);
@@ -203,7 +201,6 @@ const Statistics = () => {
         quantity: quantity.value,
         unit: unit.selectedId,
       };
-      console.log(body);
 
       const validation = validate(body, constraints.lastConstraint, { fullMessages: false });
       if (validation) {

@@ -41,6 +41,10 @@ const Dashboard = () => {
   const timeToString = (time) => `${pad(Math.trunc(time / 60))}:${pad(time % 60)}`;
 
   useEffect(() => {
+    document.title = 'Dashboard';
+  }, []);
+
+  useEffect(() => {
     const removeModal = () => {
       window.$('#deletionDialog').modal('hide');
       window.$('#messageDialog').modal('hide');

@@ -34,14 +34,16 @@ const Login = () => {
   validate.validators.confirmPassword = (value) => (value !== password.value ? 'Password doesn\'t match.' : undefined);
 
   useEffect(() => {
+    document.title = 'Log in';
+  }, []);
+
+  useEffect(() => {
     restGet(`${SERVER_PATH}api/logged-in`, dispatch, removeCookie).then((response) => {
       if (response.loggedIn) {
         dispatch(logIn());
       } else if (!response.haveUsers) {
         setSignup(true);
       }
-    }).catch((error) => {
-      console.log(error.message);
     });
   }, [dispatch, removeCookie]);
 

@@ -39,6 +39,10 @@ const RuleForm = (prop) => {
   const removeCookie = cookies[2];
 
   useEffect(() => {
+    document.title = `${isEdit ? 'Edit' : 'Add'} rule`;
+  }, [isEdit]);
+
+  useEffect(() => {
     const pad = (num) => (num < 10 ? `0${num}` : num);
     const timeToString = (time) => `${pad(Math.trunc(time / 60))}:${pad(time % 60)}`;
     (async () => {
@@ -146,7 +150,6 @@ const RuleForm = (prop) => {
           if (error.inputErrors) {
             evaluateInputErrors(error.inputErrors);
           } else {
-            console.log(`Error: ${error.message}`);
             setFormError(`Error: ${error.message}`);
           }
         });

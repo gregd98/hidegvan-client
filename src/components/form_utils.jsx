@@ -21,7 +21,6 @@ export const Input = (prop) => {
 
   const handleBlur = () => {
     let { value } = state;
-    console.log(value);
     if (decorators) {
       for (let i = 0; i < decorators.length; i += 1) {
         value = decorators[i](value);
